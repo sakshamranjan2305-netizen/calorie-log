@@ -25,12 +25,14 @@ async function renderList(root) {
     const q = filter.value.trim().toLowerCase();
     const shown = foods.filter((f) => !q || f.name.toLowerCase().includes(q));
     list.replaceChildren(...(shown.length ? shown.map((f) => el('a', {
-      class: 'result', href: `#/foods/edit/${encodeURIComponent(f.id)}`,
+      class: 'result',
+      href: f.source === 'recipe' ? `#/recipe/${encodeURIComponent(f.id)}` : `#/foods/edit/${encodeURIComponent(f.id)}`,
     },
     el('span', { class: 'result-main' },
       el('span', { class: 'result-name' }, f.name),
       el('span', { class: 'result-meta' }, `${SOURCE_LABELS[f.source] || ''} · ${describeFood(f)}`),
-      el('span', { class: 'result-meta' }, macroLine(f))),
+      el('span', { class: 'result-meta' }, f.source === 'recipe'
+        ? `${f.ingredients.length} ingredient${f.ingredients.length === 1 ? '' : 's'} · ${macroLine(f)}` : macroLine(f))),
     icon('edit', 'result-add'))) : [el('p', { class: 'empty' }, foods.length ? 'No matches.' : 'No saved foods yet. Foods you log are saved here automatically.')]));
   }
   filter.addEventListener('input', draw);
@@ -39,7 +41,10 @@ async function renderList(root) {
   root.append(
     topbar({
       title: 'My foods', subtitle: `${foods.length} saved`, back: '#/settings',
-      actions: [el('button', { type: 'button', class: 'btn btn-small', onclick: () => navigate('#/foods/new') }, icon('plus'), 'New')],
+      actions: [
+        el('button', { type: 'button', class: 'btn btn-small', onclick: () => navigate('#/recipe/new') }, icon('plus'), 'Meal'),
+        el('button', { type: 'button', class: 'btn btn-small', onclick: () => navigate('#/foods/new') }, icon('plus'), 'Food'),
+      ],
     }),
     el('div', { class: 'content' }, foods.length > 8 ? el('div', { class: 'searchbar plain' }, icon('search', 'search-icon'), filter) : null, list));
 }

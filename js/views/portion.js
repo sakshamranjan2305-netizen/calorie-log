@@ -12,7 +12,7 @@ const SERVING_CHIPS = [0.5, 1, 1.5, 2, 3];
 const GRAM_CHIPS = [50, 100, 150, 200, 250];
 const chipLabel = (v) => ({ 0.5: '½', 1.5: '1½' }[v] || String(v));
 
-export function portionForm({ food: original, amount, unit, meal, submitLabel, onSubmit, extra = null }) {
+export function portionForm({ food: original, amount, unit, meal, submitLabel, onSubmit, extra = null, showMeal = true }) {
   let food = { ...original };
   const units = unitsFor(food);
   const state = { amount, unit: units.includes(unit) ? unit : units[0], meal };
@@ -105,8 +105,8 @@ export function portionForm({ food: original, amount, unit, meal, submitLabel, o
     el('div', { class: 'amount-row' }, input, unitSeg),
     error,
     chips,
-    el('p', { class: 'field-label' }, 'Meal'),
-    segmented(MEALS.map((m) => ({ value: m.key, label: m.label })), state.meal, (m) => { state.meal = m; }, { label: 'Meal', cls: 'meal-seg' }),
+    showMeal ? el('p', { class: 'field-label' }, 'Meal') : null,
+    showMeal ? segmented(MEALS.map((m) => ({ value: m.key, label: m.label })), state.meal, (m) => { state.meal = m; }, { label: 'Meal', cls: 'meal-seg' }) : null,
     el('section', { class: 'card preview-card', 'aria-live': 'polite' }, preview),
     extra),
   el('div', { class: 'sticky-actions' }, submit));

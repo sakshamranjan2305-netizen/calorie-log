@@ -27,7 +27,7 @@ export async function render(root) {
       goalsSection(goals, goalsHistory),
       el('section', { class: 'card' },
         el('h2', {}, 'My foods'),
-        el('p', { class: 'muted small' }, 'Foods you create or log are saved here for quick re-logging.'),
+        el('p', { class: 'muted small' }, 'Foods you create or log are saved here for quick re-logging. You can also build a meal from ingredients and log it in one go.'),
         el('a', { class: 'btn btn-secondary', href: '#/foods' }, `Manage my foods (${foods.length})`)),
       backupSection(entryCount, lastBackup),
       installSlot,

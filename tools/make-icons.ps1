@@ -1,4 +1,4 @@
-# Generates the app icons (a progress ring on blue) into icons/.
+# Generates the app icons (a progress ring on pink) into icons/.
 # Usage: powershell -ExecutionPolicy Bypass -File tools\make-icons.ps1
 Add-Type -AssemblyName System.Drawing
 $root = Split-Path -Parent $PSScriptRoot
@@ -10,7 +10,7 @@ function Make-Icon([int]$size, [string]$file, [bool]$maskable) {
   $g = [System.Drawing.Graphics]::FromImage($bmp)
   $g.SmoothingMode = 'AntiAlias'
   $g.Clear([System.Drawing.Color]::Transparent)
-  $blue = [System.Drawing.ColorTranslator]::FromHtml('#256abf')
+  $blue = [System.Drawing.ColorTranslator]::FromHtml('#ff8b94')
   $light = [System.Drawing.Color]::FromArgb(90, 255, 255, 255)
 
   if ($maskable) {

@@ -36,6 +36,13 @@ export function exitFlow(fallback) {
   else navigate(fallback, { replace: true });
 }
 
+/** Return to the first screen of the current flow, staying inside it. */
+export function backToFlowStart(fallback) {
+  const s = history.state;
+  if (s && s.flowStart != null && s.depth > s.flowStart) history.go(s.flowStart - s.depth);
+  else navigate(fallback, { replace: true });
+}
+
 /** Re-render the current screen (e.g. after data changed). */
 export function refresh() {
   render({ keepScroll: true });

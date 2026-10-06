@@ -8,6 +8,7 @@ import * as entryView from './views/entry.js';
 import * as historyView from './views/history.js';
 import * as settingsView from './views/settings.js';
 import * as foodsView from './views/foods.js';
+import * as recipeView from './views/recipe.js';
 
 function resolve([name, a, b, c]) {
   switch (name) {
@@ -23,6 +24,9 @@ function resolve([name, a, b, c]) {
       return { view: settingsView, params: {}, tab: 'settings' };
     case 'foods':
       return { view: foodsView, params: { mode: a || 'list', id: b } };
+    case 'recipe':
+      if (a) return { view: recipeView, params: { id: a, step: b || 'edit' } };
+      break;
     default:
   }
   return { view: dayView, params: { date: name === 'day' && isValidDateStr(a) ? a : today() }, tab: 'day' };

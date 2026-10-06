@@ -185,6 +185,7 @@ export const SOURCE_LABELS = {
   global: 'Food (USDA)',
   off: 'Packaged (Open Food Facts)',
   custom: 'Your food',
+  recipe: 'Your meal',
 };
 
 // ---- Open Food Facts --------------------------------------------------------------

@@ -1,48 +1,66 @@
 /* ---- Tokens ---------------------------------------------------------------- */
 :root {
   color-scheme: light;
-  --page: #f9f9f7;
-  --surface: #fcfcfb;
-  --surface-2: #f0efec;
-  --ink: #0b0b0b;
-  --ink-2: #52514e;
-  --ink-3: #6f6e69;
-  --hairline: #e1e0d9;
-  --baseline: #c3c2b7;
-  --border: rgba(11, 11, 11, 0.10);
-  --accent: #2a78d6;          /* marks: meter fill, columns */
-  --accent-strong: #256abf;   /* buttons (white text clears 4.5:1) */
-  --accent-text: #1c5cab;     /* links / text accents */
-  --track: #cde2fb;           /* meter track: lighter step of the accent ramp */
-  --good: #0ca30c;
-  --good-text: #006300;
-  --bad: #d03b3b;
-  --bad-text: #b42f2f;
-  --shadow: 0 1px 2px rgba(11, 11, 11, 0.06);
-  --radius: 16px;
+  /* Palette */
+  --mint: #a8e6cf;
+  --sage: #dcedc1;
+  --peach: #ffd3b6;
+  --salmon: #ffaaa5;
+  --pink: #ff8b94;
+
+  --page: #fff8f3;
+  --surface: #ffffff;
+  --surface-2: #ffefe5;
+  --ink: #2d2426;
+  --ink-2: #6e5f61;
+  --ink-3: #8f7f80;
+  --hairline: #f6e4da;
+  --baseline: #e8cfc2;
+  --border: rgba(120, 60, 50, 0.12);
+  --accent: var(--pink);      /* marks: chart columns, primary buttons */
+  --accent-deep: #e8606f;     /* active marks, focus rings */
+  --on-accent: #3a1a1f;       /* text on pink buttons */
+  --accent-text: #c23b52;     /* links / text accents */
+  --track: #ffe3d6;
+  --dial-track: #f6ebe5;
+  --hero-bg: linear-gradient(140deg, #ebf8f1 0%, #fdf6ea 50%, #fff0e8 100%);
+  --good: #4db88a;
+  --good-text: #2f7d5a;
+  --bad: #e5484d;
+  --bad-text: #c0353f;
+  /* One colour per nutrient (fibre uses a deeper sage so the dial stays visible) */
+  --c-kcal: var(--pink);
+  --c-protein: var(--mint);
+  --c-carbs: var(--peach);
+  --c-fat: var(--salmon);
+  --c-fibre: #c3e09b;
+  --shadow: 0 1px 3px rgba(150, 80, 60, 0.08);
+  --radius: 18px;
   --tabbar-h: 64px;
   --font: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 }
 @media (prefers-color-scheme: dark) {
   :root {
     color-scheme: dark;
-    --page: #0d0d0d;
-    --surface: #1a1a19;
-    --surface-2: #262624;
-    --ink: #ffffff;
-    --ink-2: #c3c2b7;
-    --ink-3: #a3a29b;
-    --hairline: #2c2c2a;
-    --baseline: #383835;
+    --page: #1b1718;
+    --surface: #252022;
+    --surface-2: #322a2c;
+    --ink: #fff5f0;
+    --ink-2: #d2c2be;
+    --ink-3: #a8989a;
+    --hairline: #362e30;
+    --baseline: #4a3f41;
     --border: rgba(255, 255, 255, 0.10);
-    --accent: #3987e5;
-    --accent-strong: #256abf;
-    --accent-text: #86b6ef;
-    --track: #17375e;
-    --good: #0ca30c;
-    --good-text: #3fc23f;
-    --bad: #d03b3b;
-    --bad-text: #f07a7a;
+    --accent-deep: #ff8b94;
+    --accent-text: #ffaaa5;
+    --track: #3a2e30;
+    --dial-track: rgba(255, 255, 255, 0.08);
+    --hero-bg: var(--surface);
+    --good: #a8e6cf;
+    --good-text: #a8e6cf;
+    --bad: #ff6b74;
+    --bad-text: #ff9aa0;
+    --c-fibre: var(--sage);
     --shadow: none;
   }
 }
@@ -62,7 +80,7 @@ h2 { font-size: 17px; font-weight: 600; }
 a { color: var(--accent-text); }
 button, input, select { font: inherit; color: inherit; }
 button { cursor: pointer; }
-:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+:focus-visible { outline: 2px solid var(--accent-deep); outline-offset: 2px; }
 [hidden] { display: none !important; }
 
 #app { max-width: 560px; margin: 0 auto; min-height: 100dvh; padding-bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom) + 16px); }
@@ -130,28 +148,51 @@ body.no-tabbar .tabbar { display: none; }
 }
 
 /* ---- Daily summary ---------------------------------------------------------------- */
-.hero { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; }
-.hero-value { font-size: 48px; font-weight: 600; line-height: 1.05; letter-spacing: -0.5px; }
-.hero-unit { color: var(--ink-2); font-size: 16px; }
-.summary .meter { margin-top: 12px; height: 10px; border-radius: 5px; }
-.meter { height: 6px; border-radius: 3px; background: var(--track); overflow: hidden; }
-.meter > span { display: block; height: 100%; background: var(--accent); border-radius: inherit; transition: width .25s ease; }
-.meter.over > span { background: var(--bad); }
-.meter.reached > span { background: var(--good); }
+.summary { background: var(--hero-bg); padding: 20px 12px 16px; }
+.hero { display: flex; flex-direction: column; align-items: center; }
+.hero .status-text { margin-top: 10px; font-size: 14px; }
 .status-text { margin-top: 6px; font-size: 13px; color: var(--ink-2); }
 .status-mark { margin-right: 4px; font-size: 11px; }
 .status-mark.over { color: var(--bad); }
-.status-mark.reached { color: var(--good); font-size: 13px; }
-.macro-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px 20px; margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--hairline); }
-.macro-head { display: flex; flex-direction: column; margin-bottom: 6px; }
-.macro-label { font-size: 13px; color: var(--ink-2); }
-.macro-value { font-size: 14px; color: var(--ink-2); }
-.macro-value strong { font-size: 18px; color: var(--ink); font-weight: 600; }
+.status-mark.reached { color: var(--good-text); font-size: 13px; }
+.macro-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--hairline); }
+.macro { display: flex; flex-direction: column; align-items: center; text-align: center; min-width: 0; }
+.macro-label { margin-top: 6px; font-size: 13px; font-weight: 600; }
+.macro .status-text { margin-top: 2px; font-size: 11px; line-height: 1.3; }
+
+/* Progress dials: a ring that fills up to the share of the goal eaten so far. */
+.dial { position: relative; width: 100%; max-width: 76px; aspect-ratio: 1; --dial: var(--accent); }
+.dial-hero { max-width: 176px; width: 176px; }
+.dial svg { position: absolute; inset: 0; width: 100%; height: 100%; transform: rotate(-90deg); overflow: visible; }
+.dial circle { fill: none; stroke-width: 10; }
+.dial-hero circle { stroke-width: 9; }
+.dial-track { stroke: var(--dial-track); }
+.dial-fill { stroke: var(--dial); stroke-linecap: round; animation: dial-fill 1s cubic-bezier(.25, .8, .25, 1) both; }
+.dial.over .dial-fill { stroke: var(--bad); }
+@keyframes dial-fill { from { stroke-dasharray: 0 100; } }
+.dial-inner {
+  position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  line-height: 1.1; font-variant-numeric: tabular-nums;
+}
+.dial-inner strong { font-size: 16px; font-weight: 700; }
+.dial-inner span { font-size: 10px; color: var(--ink-2); }
+.dial-hero .dial-inner strong { font-size: 40px; letter-spacing: -0.5px; }
+.dial-hero .dial-inner span { font-size: 13px; margin-top: 2px; }
+.dial-kcal { --dial: var(--c-kcal); }
+.dial-protein { --dial: var(--c-protein); }
+.dial-carbs { --dial: var(--c-carbs); }
+.dial-fat { --dial: var(--c-fat); }
+.dial-fibre { --dial: var(--c-fibre); }
 
 /* ---- Meals --------------------------------------------------------------------- */
 .meal { padding: 0; }
 .meal-head { display: flex; align-items: center; gap: 8px; padding: 10px 8px 10px 16px; }
-.meal-head h2 { flex: 1; }
+.meal-head h2 { flex: 1; display: flex; align-items: center; gap: 8px; }
+.meal-head h2::before { content: ""; width: 10px; height: 10px; border-radius: 50%; background: var(--meal-dot, var(--accent)); }
+.meal-breakfast { --meal-dot: var(--peach); }
+.meal-lunch { --meal-dot: var(--mint); }
+.meal-dinner { --meal-dot: var(--salmon); }
+.meal-snacks { --meal-dot: var(--c-fibre); }
 .meal-kcal { color: var(--ink-2); font-size: 14px; font-variant-numeric: tabular-nums; }
 .add-btn {
   display: inline-flex; align-items: center; gap: 4px; min-height: 40px; padding: 0 12px 0 8px;
@@ -175,7 +216,7 @@ body.no-tabbar .tabbar { display: none; }
   border: 1px solid transparent; border-radius: 12px;
   font-weight: 600; font-size: 15px; text-decoration: none; text-align: center;
 }
-.btn-primary { background: var(--accent-strong); color: #fff; }
+.btn-primary { background: var(--accent); color: var(--on-accent); box-shadow: 0 2px 8px rgba(255, 139, 148, 0.35); }
 .btn-primary:disabled { opacity: .45; cursor: default; }
 .btn-secondary { background: var(--surface-2); color: var(--ink); }
 .btn-ghost { background: transparent; color: var(--accent-text); }
@@ -210,7 +251,7 @@ input[type="text"], input[type="search"], input[type="date"], input:not([type]) 
   border: 1px solid var(--border); border-radius: 10px; background: var(--surface);
   font-size: 16px;
 }
-input:focus { outline: 2px solid var(--accent); outline-offset: -1px; border-color: transparent; }
+input:focus { outline: 2px solid var(--accent-deep); outline-offset: -1px; border-color: transparent; }
 .select {
   width: 100%; min-height: 48px; padding: 10px 12px;
   border: 1px solid var(--border); border-radius: 10px; background: var(--surface); font-size: 16px;
@@ -221,7 +262,7 @@ input:focus { outline: 2px solid var(--accent); outline-offset: -1px; border-col
 .field-error:empty { display: none; }
 .nutrient-fields { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 .check { display: flex; align-items: center; gap: 10px; margin-top: 18px; font-size: 15px; }
-.check input { width: 20px; height: 20px; accent-color: var(--accent-strong); }
+.check input { width: 20px; height: 20px; accent-color: var(--accent-deep); }
 .food-form .content > .field:first-child { margin-top: 8px; }
 .goals-form .btn { margin-top: 16px; }
 
@@ -263,6 +304,15 @@ input:focus { outline: 2px solid var(--accent); outline-offset: -1px; border-col
 .preview-macros dt { font-size: 12px; color: var(--ink-2); }
 .preview-macros dd { margin: 0; font-size: 15px; font-weight: 600; }
 
+/* ---- Meal builder ------------------------------------------------------------------ */
+.field-gap { height: 16px; }
+.ingredient { display: flex; align-items: center; padding-right: 4px; }
+.ingredient .entry { flex: 1; min-width: 0; border: 0; background: transparent; text-align: left; }
+.ingredient .icon-btn { color: var(--ink-3); }
+.add-ingredient { border-top: 1px solid var(--hairline); border-radius: 0 0 var(--radius) var(--radius); }
+.preview-card h2 { font-size: 13px; font-weight: 600; color: var(--ink-2); margin-bottom: 4px; }
+.preview-card .per-serving { margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--hairline); }
+
 /* ---- History ------------------------------------------------------------------------- */
 .filter-row { padding: 0 16px 12px; }
 .range-note { margin: 0 4px 10px; }
@@ -277,7 +327,7 @@ input:focus { outline: 2px solid var(--accent); outline-offset: -1px; border-col
 .chart .axis { stroke: var(--baseline); stroke-width: 1; }
 .chart .tick { fill: var(--ink-3); font-size: 11px; font-variant-numeric: tabular-nums; }
 .chart .col { fill: var(--accent); }
-.chart .col.active { fill: var(--accent-strong); }
+.chart .col.active { fill: var(--accent-deep); }
 .chart .hover-band { fill: var(--surface-2); }
 .chart .goal-line { fill: none; stroke: var(--ink-2); stroke-width: 1.5; stroke-dasharray: 4 3; }
 .chart .goal-label { fill: var(--ink-2); font-size: 11px; font-weight: 600; paint-order: stroke; stroke: var(--surface); stroke-width: 3px; }
@@ -306,12 +356,12 @@ input:focus { outline: 2px solid var(--accent); outline-offset: -1px; border-col
   position: fixed; left: 50%; bottom: calc(var(--tabbar-h) + env(safe-area-inset-bottom) + 12px); z-index: 50;
   transform: translate(-50%, 20px); opacity: 0; pointer-events: none;
   display: flex; align-items: center; gap: 12px; max-width: calc(100% - 32px);
-  padding: 12px 16px; border-radius: 12px; background: #262624; color: #fff; font-size: 14px;
+  padding: 12px 16px; border-radius: 12px; background: #2d2426; color: #fff5f0; font-size: 14px;
   box-shadow: 0 6px 20px rgba(0,0,0,.25); transition: opacity .2s, transform .2s;
 }
 body.no-tabbar #toast { bottom: calc(env(safe-area-inset-bottom) + 84px); }
 #toast.show { opacity: 1; transform: translate(-50%, 0); pointer-events: auto; }
-#toast button { border: 0; background: transparent; color: #86b6ef; font-weight: 700; padding: 4px; }
+#toast button { border: 0; background: transparent; color: var(--salmon); font-weight: 700; padding: 4px; }
 
 .about p + p { margin-top: 8px; }
 

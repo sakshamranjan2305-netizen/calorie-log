@@ -47,28 +47,32 @@ function summaryCard(totals, goals) {
   const status = goalStatus(kcal, totals.kcal, goals.kcal);
   return el('section', { class: 'card summary', 'aria-label': 'Daily totals' },
     el('div', { class: 'hero' },
-      el('span', { class: 'hero-value' }, fmtKcal(totals.kcal)),
-      el('span', { class: 'hero-unit' }, `of ${fmtKcal(goals.kcal)} kcal`)),
-    meter(status),
-    statusLine(status),
+      dial(kcal.key, status, 'dial-hero',
+        el('strong', {}, fmtKcal(totals.kcal)),
+        el('span', {}, `of ${fmtKcal(goals.kcal)} kcal`)),
+      statusLine(status)),
     el('div', { class: 'macro-grid' },
       NUTRIENTS.slice(1).map((n) => {
         const s = goalStatus(n, totals[n.key], goals[n.key]);
-        return el('div', { class: 'macro' },
-          el('div', { class: 'macro-head' },
-            el('span', { class: 'macro-label' }, n.label),
-            el('span', { class: 'macro-value' },
-              el('strong', {}, fmtNutrient(n.key, totals[n.key])),
-              ` / ${fmtNutrient(n.key, goals[n.key])} ${n.unit}`)),
-          meter(s),
+        return el('div', { class: 'macro', 'aria-label': `${n.label}: ${fmtNutrient(n.key, totals[n.key])} of ${fmtNutrient(n.key, goals[n.key])} ${n.unit}` },
+          dial(n.key, s, '',
+            el('strong', {}, fmtNutrient(n.key, totals[n.key])),
+            el('span', {}, `/ ${fmtNutrient(n.key, goals[n.key])} ${n.unit}`)),
+          el('span', { class: 'macro-label' }, n.label),
           statusLine(s));
       })));
 }
 
-export function meter(status) {
-  const pct = Math.min(1, status.pct) * 100;
-  return el('div', { class: `meter ${status.state}`, 'aria-hidden': 'true' },
-    el('span', { style: { width: `${pct}%` } }));
+/** Ring that fills (animated) to the share of the goal reached; `inner` sits in the middle. */
+function dial(key, status, cls, ...inner) {
+  const pct = Math.round(Math.max(0, Math.min(1, status.pct)) * 1000) / 10;
+  const node = el('div', { class: `dial dial-${key} ${status.state} ${cls}`.trim() }, el('div', { class: 'dial-inner' }, inner));
+  // Static markup with numbers only, so innerHTML is safe here.
+  node.insertAdjacentHTML('afterbegin', '<svg viewBox="0 0 100 100" aria-hidden="true">'
+    + '<circle class="dial-track" cx="50" cy="50" r="44"/>'
+    + (pct > 0 ? `<circle class="dial-fill" cx="50" cy="50" r="44" pathLength="100" stroke-dasharray="${pct} 100"/>` : '')
+    + '</svg>');
+  return node;
 }
 
 function statusLine(status) {
@@ -79,7 +83,7 @@ function statusLine(status) {
 
 function mealCard(meal, entries, date) {
   const total = sumNutrients(entries);
-  return el('section', { class: 'card meal', 'aria-label': meal.label },
+  return el('section', { class: `card meal meal-${meal.key}`, 'aria-label': meal.label },
     el('div', { class: 'meal-head' },
       el('h2', {}, meal.label),
       entries.length ? el('span', { class: 'meal-kcal' }, `${fmtKcal(total.kcal)} kcal`) : null,
