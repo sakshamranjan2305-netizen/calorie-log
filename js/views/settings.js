@@ -158,7 +158,8 @@ function aboutSection() {
     el('p', { class: 'small' }, 'Indian dishes: ', link('https://github.com/lindsayjaacks/Indian-Nutrient-Databank-INDB-', 'Indian Nutrient Databank (INDB)'),
       ', Anuvaad Solutions / Vijayakumar et al. 2024 (CC BY). Values are per 100 g of the cooked recipe. '
       + 'Deep-fried items include all the frying oil in the recipe, so their fat and calories can read high.'),
-    el('p', { class: 'small' }, 'Basic foods: ', link('https://fdc.nal.usda.gov/', 'USDA FoodData Central'), ' (public domain).'),
-    el('p', { class: 'small' }, 'Packaged foods: ', link('https://world.openfoodfacts.org/', 'Open Food Facts'),
-      ' (ODbL), entered by volunteers — check against the pack label when it matters.'));
+    el('p', { class: 'small' }, 'Worldwide and basic foods: ', link('https://fdc.nal.usda.gov/', 'USDA FoodData Central'),
+      ' — FNDDS and SR Legacy (public domain).'),
+    el('p', { class: 'small' }, 'Packaged products: ', link('https://world.openfoodfacts.org/', 'Open Food Facts'),
+      ' (ODbL) — ~3,000 popular products built in, more searchable online. Entered by volunteers, so check the pack label when it matters.'));
 }

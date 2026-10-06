@@ -1,4 +1,5 @@
 // Shared "how much did you eat?" form, used when adding food and when editing an entry.
+// onSubmit receives { amount, unit, meal, food } — `food` carries the portion size chosen here.
 
 import { el, segmented, setChildren } from '../ui.js';
 import {
@@ -11,7 +12,8 @@ const SERVING_CHIPS = [0.5, 1, 1.5, 2, 3];
 const GRAM_CHIPS = [50, 100, 150, 200, 250];
 const chipLabel = (v) => ({ 0.5: '½', 1.5: '1½' }[v] || String(v));
 
-export function portionForm({ food, amount, unit, meal, submitLabel, onSubmit, extra = null }) {
+export function portionForm({ food: original, amount, unit, meal, submitLabel, onSubmit, extra = null }) {
+  let food = { ...original };
   const units = unitsFor(food);
   const state = { amount, unit: units.includes(unit) ? unit : units[0], meal };
 
@@ -23,18 +25,39 @@ export function portionForm({ food, amount, unit, meal, submitLabel, onSubmit, e
   const preview = el('div', { class: 'preview' });
   const submit = el('button', { type: 'submit', class: 'btn btn-primary' }, submitLabel);
   const error = el('p', { class: 'field-error', role: 'alert' });
+  const subtitle = el('p', { class: 'muted' });
 
   const unitLabel = (u) => (u === 'g' ? 'grams' : servingName(food));
   const unitSeg = units.length > 1
-    ? segmented(units.map((u) => ({ value: u, label: unitLabel(u) })), state.unit, (u) => {
-      const current = parseAmount(input.value);
-      if (current > 0) input.value = fmtInput(convertAmount(food, current, state.unit, u));
-      else input.value = u === 'g' ? '100' : '1';
-      state.unit = u;
-      renderChips();
-      update();
-    }, { label: 'Unit', cls: 'unit-seg' })
+    ? segmented(units.map((u) => ({ value: u, label: unitLabel(u) })), state.unit, (u) => setUnit(u), { label: 'Unit', cls: 'unit-seg' })
     : el('span', { class: 'unit-fixed' }, unitLabel(state.unit));
+
+  function setUnit(u) {
+    const current = parseAmount(input.value);
+    if (current > 0) input.value = fmtInput(convertAmount(food, current, state.unit, u));
+    else input.value = u === 'g' ? '100' : '1';
+    state.unit = u;
+    unitSeg.setValue?.(u);
+    renderChips();
+    update();
+  }
+
+  // Foods with several portion sizes (e.g. slice / whole pizza) get a picker.
+  const portions = original.portions || [];
+  const portionPicker = portions.length > 1 ? el('div', {},
+    el('label', { class: 'field-label', for: 'portion' }, 'Portion size'),
+    el('select', {
+      id: 'portion', class: 'select',
+      onchange: (e) => {
+        const p = portions[Number(e.target.value)];
+        food = { ...food, servingLabel: p.label, servingGrams: p.grams };
+        if (unitSeg.setValue) unitSeg.querySelector('button').textContent = servingName(food);
+        if (state.unit !== 'serving') { state.unit = 'serving'; input.value = '1'; unitSeg.setValue?.('serving'); renderChips(); }
+        update();
+      },
+    }, portions.map((p, i) => el('option', {
+      value: String(i), selected: p.label === food.servingLabel && p.grams === food.servingGrams,
+    }, `${p.label} (${fmtNum(p.grams)} g)`)))) : null;
 
   function renderChips() {
     const values = state.unit === 'g' ? GRAM_CHIPS : SERVING_CHIPS;
@@ -45,6 +68,7 @@ export function portionForm({ food, amount, unit, meal, submitLabel, onSubmit, e
   }
 
   function update() {
+    subtitle.textContent = `${SOURCE_LABELS[food.source] || ''} · ${describeFood(food)}`;
     const amt = parseAmount(input.value);
     const valid = amt > 0 && amt < 100000;
     submit.disabled = !valid;
@@ -67,15 +91,16 @@ export function portionForm({ food, amount, unit, meal, submitLabel, onSubmit, e
       const amt = parseAmount(input.value);
       if (!(amt > 0)) return;
       submit.disabled = true;
-      Promise.resolve(onSubmit({ amount: amt, unit: state.unit, meal: state.meal }))
+      Promise.resolve(onSubmit({ amount: amt, unit: state.unit, meal: state.meal, food }))
         .catch((err) => { error.textContent = err.message; submit.disabled = false; });
     },
   },
   el('div', { class: 'content' },
     el('div', { class: 'food-title' },
       el('h2', {}, food.name),
-      el('p', { class: 'muted' }, `${SOURCE_LABELS[food.source] || ''} · ${describeFood(food)}`),
+      subtitle,
       food.fibreMissing ? el('p', { class: 'muted small' }, 'Fibre not listed for this product.') : null),
+    portionPicker,
     el('label', { class: 'field-label', for: 'amount' }, 'Amount'),
     el('div', { class: 'amount-row' }, input, unitSeg),
     error,

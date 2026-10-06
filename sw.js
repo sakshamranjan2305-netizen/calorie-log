@@ -2,7 +2,7 @@
 // show up right away) and fall back to the cache when offline or when the network is slow.
 // Open Food Facts requests are cross-origin and are not touched.
 
-const CACHE = 'calorie-log-v1';
+const CACHE = 'calorie-log-v2';
 const APP_FILES = [
   './',
   'index.html',
@@ -27,6 +27,8 @@ const APP_FILES = [
   'js/views/settings.js',
   'data/indb.json',
   'data/basics.json',
+  'data/global.json',
+  'data/packaged.json',
   'icons/icon-192.png',
   'icons/icon-512.png',
   'icons/icon-maskable-512.png',

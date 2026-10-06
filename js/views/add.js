@@ -65,30 +65,35 @@ function renderSearch(root) {
       return;
     }
     const mine = await searchMyFoods(q);
-    const catalog = await searchCatalog(q, new Set(mine.map((f) => f.id)));
+    const shown = new Set(mine.map((f) => f.id));
+    const { foods, packaged } = await searchCatalog(q, shown);
     if (s.query.trim() !== q) return; // a newer search has started
+    packaged.forEach((f) => shown.add(f.id));
     setChildren(results,
       mine.length ? group('My foods', mine.map(foodRow)) : null,
-      group('Indian dishes & basic foods', catalog.length ? catalog.map(foodRow) : [el('p', { class: 'empty' }, `No matches for “${q}”.`)]),
-      onlineSection(q),
+      foods.length ? group('Foods — Indian & worldwide', foods.map(foodRow))
+        : !packaged.length && !mine.length ? group('Foods', [el('p', { class: 'empty' }, `No matches for “${q}”.`)]) : null,
+      packaged.length ? group('Packaged products', packaged.map(foodRow)) : null,
+      onlineSection(q, shown),
       createRow());
   }
 
-  function onlineSection(q) {
+  function onlineSection(q, shown) {
     const o = s.online && s.online.query === q ? s.online : null;
     let body;
     if (!o) {
       body = el('button', { type: 'button', class: 'btn btn-secondary', onclick: searchOnline },
-        icon('globe'), `Search packaged foods for “${q}”`);
+        icon('globe'), `Search more products online for “${q}”`);
     } else if (o.status === 'loading') {
       body = el('p', { class: 'empty' }, 'Searching Open Food Facts…');
     } else if (o.status === 'error') {
       body = el('div', {}, el('p', { class: 'empty' }, o.error),
         el('button', { type: 'button', class: 'btn btn-secondary', onclick: searchOnline }, 'Try again'));
     } else {
-      body = o.items.length ? o.items.map(foodRow) : [el('p', { class: 'empty' }, 'No packaged products found.')];
+      const items = o.items.filter((f) => !shown.has(f.id));
+      body = items.length ? items.map(foodRow) : [el('p', { class: 'empty' }, 'No other products found online.')];
     }
-    return group('Packaged foods (online)', body);
+    return group('More products (online)', body);
   }
 
   async function searchOnline() {
@@ -158,7 +163,8 @@ function renderPortion(root) {
     topbar({ title: 'How much?', subtitle: `${mealLabel(s.meal)} · ${dayName(s.date)}`, back: s.base }),
     portionForm({
       food, amount, unit, meal: s.meal, submitLabel: 'Add',
-      onSubmit: async ({ amount: amt, unit: u, meal }) => {
+      onSubmit: async ({ amount: amt, unit: u, meal, food: chosen }) => {
+        const food = chosen; // includes the portion size picked on this screen
         const { _idx, transient, lastUsed, useCount, lastAmount, lastUnit, ...snapshot } = food;
         await db.putEntry({
           id: db.uid(), date: s.date, meal, name: food.name, amount: amt, unit: u,

@@ -33,8 +33,8 @@ export async function render(root, { id }) {
     portionForm({
       food: entry.food, amount: entry.amount, unit: entry.unit, meal: entry.meal, submitLabel: 'Save',
       extra: remove,
-      onSubmit: async ({ amount, unit, meal }) => {
-        await db.putEntry({ ...entry, amount, unit, meal, ...nutrientsFor(entry.food, amount, unit), updatedAt: Date.now() });
+      onSubmit: async ({ amount, unit, meal, food }) => {
+        await db.putEntry({ ...entry, amount, unit, meal, food, ...nutrientsFor(food, amount, unit), updatedAt: Date.now() });
         toast('Saved');
         goBack(back);
       },

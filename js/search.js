@@ -100,32 +100,56 @@ function rank(list, query, limit) {
 
 // ---- Bundled food lists -----------------------------------------------------------
 
+// Rows are [code, name, kcal, protein, carbs, fat, fibre, ...] per 100 g, followed either by
+// servingUnit, servingGrams (INDB, basics) or by a list of [label, grams] portions (global, packaged).
 const DATASETS = [
-  { url: 'data/indb.json', source: 'indb' },
-  { url: 'data/basics.json', source: 'usda' },
+  { url: 'data/indb.json', source: 'indb', idPrefix: 'indb' },
+  { url: 'data/basics.json', source: 'usda', idPrefix: 'usda' },
+  { url: 'data/global.json', source: 'global', idPrefix: 'usda' },
+  { url: 'data/packaged.json', source: 'off', idPrefix: 'off' },
 ];
 let catalogPromise = null;
 
+function rowToFood([code, name, kcal, protein, carbs, fat, fibre, a, b], { source, idPrefix }) {
+  const portions = Array.isArray(a)
+    ? a.map(([label, grams]) => ({ label, grams }))
+    : (a && b > 0 ? [{ label: a, grams: b }] : []);
+  return {
+    id: `${idPrefix}:${code}`, source, name, basis: '100g',
+    kcal, protein, carbs, fat, fibre,
+    portions,
+    servingLabel: portions[0]?.label || '', servingGrams: portions[0]?.grams || 0,
+  };
+}
+
 function loadCatalog() {
   if (!catalogPromise) {
-    catalogPromise = Promise.all(DATASETS.map(async ({ url, source }) => {
-      const res = await fetch(url);
-      if (!res.ok) throw new Error('Could not load the food list');
-      const data = await res.json();
-      return data.foods.map(([code, name, kcal, protein, carbs, fat, fibre, servingUnit, servingGrams]) => ({
-        id: `${source}:${code}`, source, name, basis: '100g',
-        kcal, protein, carbs, fat, fibre,
-        servingLabel: servingUnit || '', servingGrams: servingGrams || 0,
-      }));
-    })).then((lists) => lists.flat());
+    catalogPromise = Promise.all(DATASETS.map(async (ds) => {
+      try {
+        const res = await fetch(ds.url);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        return data.foods.map((row) => rowToFood(row, ds));
+      } catch (err) {
+        console.warn(`Food list ${ds.url} unavailable`, err);
+        return null;
+      }
+    })).then((lists) => {
+      if (lists.every((l) => l === null)) throw new Error('Could not load the food lists');
+      return lists.filter(Boolean).flat();
+    });
     catalogPromise.catch(() => { catalogPromise = null; });
   }
   return catalogPromise;
 }
 
+/** Bundled generic foods (Indian dishes, basics, worldwide) and bundled packaged products. */
 export async function searchCatalog(query, excludeIds = new Set(), limit = 40) {
-  const all = await loadCatalog();
-  return rank(all.filter((f) => !excludeIds.has(f.id)), query, limit);
+  const all = (await loadCatalog()).filter((f) => !excludeIds.has(f.id));
+  return {
+    foods: rank(all.filter((f) => f.source !== 'off'), query, limit),
+    packaged: rank(all.filter((f) => f.source === 'off'), query, 15),
+  };
 }
 
 // ---- My foods -------------------------------------------------------------------
@@ -146,6 +170,8 @@ export async function rememberFood(food, amount, unit) {
   const { _idx, ...clean } = base;
   await db.putFood({
     ...clean,
+    servingLabel: food.servingLabel,
+    servingGrams: food.servingGrams,
     lastUsed: Date.now(),
     useCount: (existing?.useCount || 0) + 1,
     lastAmount: amount,
@@ -156,6 +182,7 @@ export async function rememberFood(food, amount, unit) {
 export const SOURCE_LABELS = {
   indb: 'Indian dish (INDB)',
   usda: 'Basic food (USDA)',
+  global: 'Food (USDA)',
   off: 'Packaged (Open Food Facts)',
   custom: 'Your food',
 };
@@ -200,6 +227,7 @@ function offToFood(p) {
     basis: '100g',
     kcal: r1(kcal), protein: r1(n.proteins_100g), carbs: r1(n.carbohydrates_100g), fat: r1(n.fat_100g), fibre: r1(n.fiber_100g),
     fibreMissing: num(n.fiber_100g) == null,
+    portions: grams > 0 ? [{ label: 'serving', grams: Math.round(grams * 10) / 10 }] : [],
     servingLabel: grams > 0 ? 'serving' : '', servingGrams: grams > 0 ? Math.round(grams * 10) / 10 : 0,
   };
 }
